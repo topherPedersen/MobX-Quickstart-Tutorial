@@ -1,19 +1,30 @@
 import React from 'react';
-import { observable, computed, reaction, action } from 'mobx';
+import { autorun, decorate, observable, computed, reaction, action } from 'mobx';
 
-class TodoStore {
+class ObservableTodoStore {
+  // @observable
   todos = [];
 
+  // @observable
+  pendingRequests = 0;
+
+  constructor() {
+    autorun( () => console.log(this.report) );
+  }
+
+  // @computed
   get completedTodosCount() {
     return this.todos.filter(
       todo => todo.completed === true
     ).length;
   }
 
-  report() {
-    if (this.todos.length === 0) 
+  // @computed
+  get report() {
+    if (this.todos.length === 0)
       return "<none>";
-    return `Next todo: "${this.todos[0].task}". ` + `Progress: ${this.completedTodosCount}/${this.todos.length}`;
+    return `Next todo: "${this.todos[0].task}". ` +
+      `Progress: ${this.completedTodosCount}/${this.todos.length}`;
   }
 
   addTodo(task) {
@@ -24,23 +35,24 @@ class TodoStore {
     });
   }
 }
+decorate(ObservableTodoStore, {
+  todos: observable,
+  pendingRequests: observable,
+  completedTodosCount: computed,
+  report: computed
+})
 
-const todoStore = new TodoStore();
+const todoStore = new ObservableTodoStore();
 
 todoStore.addTodo("read MobX tutorial");
-console.log(todoStore.report());
 
 todoStore.addTodo("try MobX");
-console.log(todoStore.report());
 
 todoStore.todos[0].completed = true;
-console.log(todoStore.report());
 
 todoStore.todos[1].task = "try MobX in own project";
-console.log(todoStore.report());
 
 todoStore.todos[0].task = "grok MobX tutorial";
-console.log(todoStore.report());
 
 function App() {
   return (
